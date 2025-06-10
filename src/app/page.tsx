@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Loader2, ClipboardCheck, Copy } from "lucide-react";
+import { Loader2, ClipboardCheck } from "lucide-react";
 
 interface Diff {
   id: string;
@@ -125,156 +125,91 @@ export default function Home() {
   // — Loading / Error / Select UI —
   if (loadingDiffs) {
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center">
-        <Loader2 className="animate-spin h-12 w-12 text-blue-600 mb-4" />
-        <span className="text-lg text-gray-600">Loading releases…</span>
+      <div className="min-h-screen flex flex-col items-center justify-center p-6">
+        <Loader2 className="animate-spin h-8 w-8 mb-2" />
+        <span>Loading releases…</span>
       </div>
     );
   }
   if (errorDiffs) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-red-600 text-lg">{errorDiffs}</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-          >
-            Retry
-          </button>
-        </div>
+      <div className="min-h-screen flex items-center justify-center p-6">
+        <p className="text-red-600">{errorDiffs}</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
-      <div className="max-w-6xl mx-auto px-6">
-        {/* Header Section - Centered */}
-        <div className="text-center mb-12">
-          <h1 className="text-6xl font-bold text-gray-900 mb-8">Diff Digest</h1>
+    <div className="min-h-screen p-8 flex flex-col items-center space-y-8">
+      <h1 className="text-5xl font-extrabold">Diff Digest</h1>
 
-          {/* Dropdown - Centered */}
-          <div className="flex justify-center">
-            <select
-              className="px-6 py-3 border-2 border-gray-300 rounded-lg text-lg bg-white shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none min-w-96"
-              value={selected?.id || ""}
-              onChange={(e) =>
-                setSelected(diffs.find((d) => d.id === e.target.value) || null)
-              }
+      <div className="w-full flex justify-center">
+        <select
+          className="border px-4 py-2 rounded w-64"
+          value={selected?.id || ""}
+          onChange={(e) =>
+            setSelected(diffs.find((d) => d.id === e.target.value) || null)
+          }
+        >
+          <option value="">Select release</option>
+          {diffs.map((pr) => (
+            <option key={pr.id} value={pr.id}>
+              #{pr.id} {pr.description}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Notes */}
+      {selected && (
+        <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-8">
+          {/* Developer */}
+          <div className="flex flex-col">
+            <h2 className="text-2xl font-semibold mb-2">Developer Notes</h2>
+            {loadingNotes && (
+              <div className="flex items-center gap-2 mb-2">
+                <Loader2 className="animate-spin h-5 w-5" />
+                <span>Streaming…</span>
+              </div>
+            )}
+            <textarea
+              className="flex-1 p-2 border rounded resize-none h-48"
+              value={devNotes}
+              readOnly
+            />
+            <button
+              onClick={() => copyToClipboard(devNotes, "developer")}
+              className="mt-2 self-center md:self-start flex items-center gap-1 text-blue-600"
             >
-              <option value="">Select Release</option>
-              {diffs.map((pr) => (
-                <option key={pr.id} value={pr.id}>
-                  #{pr.id} - {pr.description}
-                </option>
-              ))}
-            </select>
+              <ClipboardCheck className="h-5 w-5" />
+              {copied === "developer" ? "Copied!" : "Copy"}
+            </button>
+          </div>
+
+          {/* Marketing */}
+          <div className="flex flex-col">
+            <h2 className="text-2xl font-semibold mb-2">Marketing Notes</h2>
+            {loadingNotes && (
+              <div className="flex items-center gap-2 mb-2">
+                <Loader2 className="animate-spin h-5 w-5" />
+                <span>Streaming…</span>
+              </div>
+            )}
+            <textarea
+              className="flex-1 p-2 border rounded resize-none h-48"
+              value={mktNotes}
+              readOnly
+            />
+            <button
+              onClick={() => copyToClipboard(mktNotes, "marketing")}
+              className="mt-2 self-center md:self-start flex items-center gap-1 text-blue-600"
+            >
+              <ClipboardCheck className="h-5 w-5" />
+              {copied === "marketing" ? "Copied!" : "Copy"}
+            </button>
           </div>
         </div>
-
-        {/* Notes Section - Two Columns */}
-        {selected && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-12">
-            {/* Developer Notes Column */}
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-2xl font-semibold text-gray-800">
-                  Developer Notes
-                </h2>
-                {loadingNotes && (
-                  <div className="flex items-center gap-2 text-blue-600">
-                    <Loader2 className="animate-spin h-5 w-5" />
-                    <span className="text-sm">Generating...</span>
-                  </div>
-                )}
-              </div>
-
-              <textarea
-                className="w-full h-80 p-4 border border-gray-300 rounded-lg resize-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none font-mono text-sm"
-                value={devNotes}
-                readOnly
-                placeholder={
-                  loadingNotes
-                    ? "Generating developer notes..."
-                    : "Developer notes will appear here"
-                }
-              />
-
-              <button
-                onClick={() => copyToClipboard(devNotes, "developer")}
-                disabled={!devNotes || loadingNotes}
-                className="mt-4 flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-              >
-                {copied === "developer" ? (
-                  <>
-                    <ClipboardCheck className="h-4 w-4" />
-                    Copied!
-                  </>
-                ) : (
-                  <>
-                    <Copy className="h-4 w-4" />
-                    Copy to Clipboard
-                  </>
-                )}
-              </button>
-            </div>
-
-            {/* Marketing Notes Column */}
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-2xl font-semibold text-gray-800">
-                  Marketing Notes
-                </h2>
-                {loadingNotes && (
-                  <div className="flex items-center gap-2 text-blue-600">
-                    <Loader2 className="animate-spin h-5 w-5" />
-                    <span className="text-sm">Generating...</span>
-                  </div>
-                )}
-              </div>
-
-              <textarea
-                className="w-full h-80 p-4 border border-gray-300 rounded-lg resize-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none font-mono text-sm"
-                value={mktNotes}
-                readOnly
-                placeholder={
-                  loadingNotes
-                    ? "Generating marketing notes..."
-                    : "Marketing notes will appear here"
-                }
-              />
-
-              <button
-                onClick={() => copyToClipboard(mktNotes, "marketing")}
-                disabled={!mktNotes || loadingNotes}
-                className="mt-4 flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-              >
-                {copied === "marketing" ? (
-                  <>
-                    <ClipboardCheck className="h-4 w-4" />
-                    Copied!
-                  </>
-                ) : (
-                  <>
-                    <Copy className="h-4 w-4" />
-                    Copy to Clipboard
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Empty State */}
-        {!selected && !loadingDiffs && (
-          <div className="text-center mt-16">
-            <div className="text-gray-400 text-lg">
-              Select a release above to generate notes
-            </div>
-          </div>
-        )}
-      </div>
+      )}
     </div>
   );
 }
