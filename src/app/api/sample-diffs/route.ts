@@ -55,8 +55,7 @@ export async function GET(req: Request) {
       perPage: per_page,
     });
   } catch (err: unknown) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const msg = err instanceof Error ? err.message : String(err as any);
+    const msg = err instanceof Error ? err.message : String(err);
     return NextResponse.json(
       { error: "Could not fetch PR diffs", details: msg },
       { status: 500 }

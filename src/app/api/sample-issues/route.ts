@@ -25,8 +25,7 @@ export async function GET(req: Request) {
           : "No related issues found.",
     });
   } catch (err: unknown) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const msg = err instanceof Error ? err.message : String(err as any);
+    const msg = err instanceof Error ? err.message : String(err);
     return NextResponse.json({ error: msg }, { status: 500 });
   }
 }
