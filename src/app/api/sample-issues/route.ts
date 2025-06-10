@@ -24,7 +24,8 @@ export async function GET(req: Request) {
           ? `Related issues:\n${titles}`
           : "No related issues found.",
     });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }

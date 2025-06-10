@@ -54,9 +54,10 @@ export async function GET(req: Request) {
       currentPage: page,
       perPage: per_page,
     });
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
     return NextResponse.json(
-      { error: "Could not fetch PR diffs", details: err.message },
+      { error: "Could not fetch PR diffs", details: msg },
       { status: 500 }
     );
   }
